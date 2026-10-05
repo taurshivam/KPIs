@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Industry KPI Guide: targets and direction</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#f5f7fa;--card:#fff;--ink:#16202e;--mute:#5d6b7e;--line:#dde3ec;--up:#0b8f6a;--upbg:#dff5ec;--dn:#c2410c;--dnbg:#ffe9dd;--rg:#4f46e5;--rgbg:#e8e7ff}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1620;--card:#18222f;--ink:#e8eef6;--mute:#93a1b4;--line:#2a3646;--up:#3dd6a3;--upbg:#12372d;--dn:#ff9a62;--dnbg:#3b2417;--rg:#a5a0ff;--rgbg:#26264d}}
+:root[data-theme="dark"]{--bg:#0f1620;--card:#18222f;--ink:#e8eef6;--mute:#93a1b4;--line:#2a3646;--up:#3dd6a3;--upbg:#12372d;--dn:#ff9a62;--dnbg:#3b2417;--rg:#a5a0ff;--rgbg:#26264d}
+html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 70px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 "IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif}
+header{padding:40px 20px 20px;max-width:1100px;margin:0 auto}
+h1{font-size:clamp(28px,5vw,44px);line-height:1.1;margin:0 0 10px;letter-spacing:-.02em}
+header p{margin:0;color:var(--mute);max-width:62ch}
+.legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}
+.pill{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;font-weight:600;font-size:14px;border:0;cursor:pointer;color:var(--ink);background:var(--card);outline:1px solid var(--line)}
+.pill b{font-size:16px}
+.pill.u b{color:var(--up)}.pill.d b{color:var(--dn)}.pill.r b{color:var(--rg)}
+.pill[aria-pressed=true]{outline:2px solid var(--ink)}
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line);padding:10px 20px}
+.bar div{max-width:1100px;margin:0 auto;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+input{flex:1 1 200px;padding:10px 14px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit}
+select{padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit}
+:focus-visible{outline:3px solid var(--rg);outline-offset:2px}
+main{max-width:1100px;margin:0 auto;padding:20px}
+section{margin:0 0 36px}
+section h2{display:flex;align-items:center;gap:12px;font-size:22px;margin:0 0 12px}
+section h2 i{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;font-style:normal;font-size:18px;background:var(--c)}
+section h2 small{font-weight:400;color:var(--mute);font-size:13px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.k{background:var(--card);border:1px solid var(--line);border-left:6px solid var(--a);border-radius:10px;padding:14px 16px}
+.k h3{margin:0;font-size:16px}
+.k p{margin:2px 0 10px;color:var(--mute);font-size:13px}
+.t{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.tv{font-size:20px;font-weight:700;color:var(--a)}
+.tag{font-size:12px;font-weight:600;padding:3px 9px;border-radius:999px;background:var(--b);color:var(--a);white-space:nowrap}
+.u{--a:var(--up);--b:var(--upbg)}.d{--a:var(--dn);--b:var(--dnbg)}.r{--a:var(--rg);--b:var(--rgbg)}
+.empty{padding:40px;text-align:center;color:var(--mute)}
+footer{max-width:1100px;margin:0 auto;padding:0 20px 40px;color:var(--mute);font-size:13px}
+@media print{.bar{display:none}}
+</style>
+</head>
+<body>
+<header>
+<h1>Industry KPIs: what to track and what good looks like</h1>
+<p id="count"></p>
+<div class="legend" role="group" aria-label="Filter by direction">
+<button class="pill u" data-f="u" aria-pressed="false"><b>▲</b> Higher is better</button>
+<button class="pill d" data-f="d" aria-pressed="false"><b>▼</b> Lower is better</button>
+<button class="pill r" data-f="r" aria-pressed="false"><b>◆</b> Stay in a range</button>
+</div>
+</header>
+<div class="bar"><div>
+<input id="q" type="search" placeholder="Search a KPI, e.g. churn, OEE, margin" aria-label="Search KPIs">
+<select id="ind" aria-label="Industry"><option value="">All industries</option></select>
+</div></div>
+<main id="out"></main>
+<footer>Targets are common benchmark ranges, not rules. They vary by company size, region and business model, so compare against your own history and direct peers.</footer>
+<script>
+const D=[
+["Manufacturing","🏭","#cfe3ff",[
+["OEE","Availability × Performance × Quality","85%+","u"],
+["First pass yield","Good units first time ÷ units started","95%+","u"],
+["Scrap rate","Scrapped units ÷ total produced","< 2%","d"],
+["Unplanned downtime","Unscheduled stop time ÷ planned time","< 5%","d"],
+["On-time delivery","Orders shipped on time ÷ total orders","95%+","u"],
+["Inventory turnover","COGS ÷ average inventory","8–12×","u"]]],
+["Retail & E-commerce","🛒","#ffe2c7",[
+["Conversion rate","Orders ÷ site sessions","2–4%","u"],
+["Cart abandonment","Abandoned carts ÷ carts created","< 70%","d"],
+["Average order value","Revenue ÷ orders","Rising trend","u"],
+["Return rate","Returned orders ÷ orders","< 10%","d"],
+["Gross margin","(Revenue − COGS) ÷ revenue","40–50%","u"],
+["Inventory turnover","COGS ÷ average inventory","4–6×","u"]]],
+["SaaS & Software","💻","#e1d9ff",[
+["Net revenue retention","Revenue from existing customers vs a year ago","100%+ (best 120%)","u"],
+["Customer churn","Customers lost ÷ customers at start","< 5% per year","d"],
+["LTV : CAC","Lifetime value ÷ acquisition cost","3 : 1 or more","u"],
+["CAC payback","Months to recover acquisition cost","< 12 months","d"],
+["Rule of 40","Growth % + profit margin %","40 or more","u"],
+["Gross margin","(Revenue − hosting & support) ÷ revenue","75–80%+","u"]]],
+["Banking & Finance","🏦","#d3f2e3",[
+["Gross NPA ratio","Bad loans ÷ total loans","< 2–3%","d"],
+["Net interest margin","(Interest earned − paid) ÷ earning assets","3–4%","u"],
+["Cost-to-income ratio","Operating cost ÷ operating income","< 55%","d"],
+["CASA ratio","Current + savings deposits ÷ total deposits","40%+","u"],
+["Capital adequacy ratio","Capital ÷ risk-weighted assets","Above regulatory minimum, 14%+","u"],
+["Credit-deposit ratio","Loans ÷ deposits","70–80%","r"]]],
+["Healthcare","🏥","#ffd9dc",[
+["Bed occupancy","Occupied bed days ÷ available bed days","75–85%","r"],
+["Average length of stay","Total inpatient days ÷ discharges","4–5 days (case-mix dependent)","d"],
+["30-day readmission","Readmitted patients ÷ discharges","< 15%","d"],
+["Patient satisfaction","Survey score (HCAHPS / internal)","90%+","u"],
+["Hospital-acquired infection","Infections ÷ patient days","< 2%","d"],
+["Claim denial rate","Denied claims ÷ submitted claims","< 5%","d"]]],
+["Logistics & Supply Chain","🚚","#fff1b8",[
+["OTIF","Orders on time and in full ÷ total orders","95%+","u"],
+["Perfect order rate","Orders with zero errors ÷ total orders","95%+","u"],
+["Order accuracy","Correctly picked orders ÷ total orders","99%+","u"],
+["Fleet utilization","Active vehicle hours ÷ available hours","85%+","u"],
+["Damage rate","Damaged shipments ÷ total shipments","< 1%","d"],
+["Cost per shipment","Total logistics cost ÷ shipments","Falling trend","d"]]],
+["Hospitality & Travel","🏨","#d6ecf3",[
+["Occupancy rate","Rooms sold ÷ rooms available","65–75%+","u"],
+["ADR","Room revenue ÷ rooms sold","Above comp set","u"],
+["RevPAR","Room revenue ÷ rooms available","Above comp set","u"],
+["GOPPAR","Gross operating profit ÷ rooms available","Rising trend","u"],
+["Guest satisfaction","Review / survey score","85%+ (4.3 of 5)","u"],
+["Cost per occupied room","Room operating cost ÷ rooms sold","Falling trend","d"]]],
+["Telecom","📡","#e8e0d3",[
+["ARPU","Revenue ÷ average subscribers","Rising trend","u"],
+["Monthly churn","Subscribers lost ÷ subscribers at start","< 2%","d"],
+["Network uptime","Time available ÷ total time","99.9%+","u"],
+["Call drop rate","Dropped calls ÷ total calls","< 1%","d"],
+["Cost per gross add","Acquisition spend ÷ new subscribers","Falling trend","d"],
+["NPS","Promoters % − detractors %","30+","u"]]],
+["HR & People","🧑‍🤝‍🧑","#f5d9f0",[
+["Attrition rate","Leavers ÷ average headcount","10–15%","d"],
+["Time to hire","Days from job open to offer accepted","< 30–45 days","d"],
+["Offer acceptance rate","Offers accepted ÷ offers made","85%+","u"],
+["eNPS","Promoters % − detractors % among staff","30+","u"],
+["Absenteeism","Unplanned absence days ÷ working days","< 3%","d"],
+["Training hours per employee","Training hours ÷ headcount","30–40 per year","u"]]],
+["Marketing","📣","#ffd8e8",[
+["ROAS","Ad revenue ÷ ad spend","4 : 1 or more","u"],
+["Click-through rate","Clicks ÷ impressions","2%+ (search), 0.5–1% (display)","u"],
+["Cost per lead","Marketing spend ÷ leads","Falling trend","d"],
+["Email open rate","Opens ÷ delivered emails","20–25%+","u"],
+["Bounce rate","Single-page visits ÷ visits","< 40–50%","d"],
+["Lead-to-customer rate","Customers ÷ leads","2–5% (B2B)","u"]]],
+["Finance (any business)","💰","#dcefc9",[
+["Net profit margin","Net profit ÷ revenue","10%+","u"],
+["Return on equity","Net profit ÷ shareholder equity","15%+","u"],
+["Current ratio","Current assets ÷ current liabilities","1.5–2.0","r"],
+["Debt-to-equity","Total debt ÷ equity","< 1–2","d"],
+["Days sales outstanding","Receivables ÷ revenue × days","< 45 days","d"],
+["Operating cash flow ratio","Operating cash flow ÷ current liabilities","> 1","u"]]],
+["Customer Support","🎧","#cdeeea",[
+["CSAT","Satisfied responses ÷ total responses","85%+","u"],
+["First contact resolution","Solved on first contact ÷ total tickets","70–75%+","u"],
+["First response time","Time to first reply (email)","< 1 hour","d"],
+["Average handle time","Talk + after-call work time","Lower, without hurting CSAT","d"],
+["Ticket backlog","Open tickets ÷ daily closed tickets","< 1 day","d"],
+["Customer effort score","Survey, 1 (easy) to 7 (hard) scale","Above 5 of 7 (easy)","u"]]],
+["IT & Engineering","⚙️","#dfe3ea",[
+["System uptime","Time available ÷ total time","99.9%+","u"],
+["MTTR","Average time to restore service","< 1 hour","d"],
+["Deployment frequency","Production releases per period","Daily to weekly","u"],
+["Change failure rate","Failed releases ÷ total releases","< 15%","d"],
+["Lead time for changes","Commit to production time","< 1 day","d"],
+["Defect escape rate","Bugs found in production ÷ all bugs","< 10%","d"]]]
+];
+const L={u:["▲","Higher is better"],d:["▼","Lower is better"],r:["◆","Stay in range"]};
+let f=null;const out=document.getElementById("out"),q=document.getElementById("q"),sel=document.getElementById("ind");
+D.forEach(x=>sel.add(new Option(x[0],x[0])));
+document.getElementById("count").textContent=D.length+" industries and "+D.reduce((s,x)=>s+x[3].length,0)+" KPIs, each with a typical target and whether you want the number to go up, down or stay in a band.";
+function esc(s){return s.replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]))}
+function draw(){
+const t=q.value.toLowerCase(),i=sel.value;let h="";
+D.forEach(x=>{
+if(i&&x[0]!==i)return;
+const ks=x[3].filter(k=>(!f||k[3]===f)&&(!t||(k[0]+k[1]+x[0]).toLowerCase().includes(t)));
+if(!ks.length)return;
+h+=`<section><h2><i style="--c:${x[2]}" aria-hidden="true">${x[1]}</i>${esc(x[0])} <small>${ks.length} KPIs</small></h2><div class="grid">`+
+ks.map(k=>`<article class="k ${k[3]}"><h3>${esc(k[0])}</h3><p>${esc(k[1])}</p><div class="t"><span class="tv">${esc(k[2])}</span><span class="tag">${L[k[3]][0]} ${L[k[3]][1]}</span></div></article>`).join("")+`</div></section>`;
+});
+out.innerHTML=h||'<div class="empty">No KPIs match. Clear the search or filter.</div>';
+}
+document.querySelectorAll(".pill").forEach(b=>b.onclick=()=>{
+f=f===b.dataset.f?null:b.dataset.f;
+document.querySelectorAll(".pill").forEach(p=>p.setAttribute("aria-pressed",p.dataset.f===f));draw();});
+q.oninput=draw;sel.onchange=draw;draw();
+</script>
+</body>
+</html>
